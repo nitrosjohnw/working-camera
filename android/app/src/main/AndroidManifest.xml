@@ -29,6 +29,7 @@
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="restate"/>
         <data android:scheme="com.nitrosjohnw.flipclipz2"/>
+        <data android:scheme="exp+flipclipz2"/>
       </intent-filter>
     </activity>
   </application>
