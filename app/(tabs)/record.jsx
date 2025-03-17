@@ -413,3 +413,4 @@ const styles = StyleSheet.create({
 });
 
 export default Record;
+//fixed
