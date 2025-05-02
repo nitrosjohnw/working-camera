@@ -7,6 +7,7 @@ import {
   Alert,
   Modal,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FormField from '@/components/FormField';
@@ -108,6 +109,13 @@ const Upload = () => {
 
   return (
     <SafeAreaView className="bg-primary h-full">
+      {uploading && ( // Show spinner when uploading
+        <View className="absolute inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
+          <ActivityIndicator size="large" color="#ffffff" />
+          <Text className="text-white mt-4">Uploading...</Text>
+        </View>
+      )}
+
       <ScrollView className="px-4 mt-6" keyboardShouldPersistTaps="handled">
         <Text className="text-2xl text-white font-psemibold">Upload Video</Text>
 

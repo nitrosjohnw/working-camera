@@ -40,6 +40,9 @@ const Record = () => {
 
   const device = useCameraDevice(cameraPosition);
 
+  // Volume state
+  const [currentVolume, setCurrentVolume] = useState(0);
+
   useEffect(() => {
     (async () => {
       if (!hasPermission) await requestPermission();
@@ -50,19 +53,42 @@ const Record = () => {
     let lastVolume = 0;
     SystemSetting.getVolume().then((volume) => {
       lastVolume = volume;
+      setCurrentVolume(volume);
+      console.log("Initial volume:", volume);
     });
 
     const volumeListener = SystemSetting.addVolumeListener((data) => {
-      if (data.value > lastVolume) {
-        handleClipButtonPress();
+      console.log("Volume changed:", data.value);
+      let newVolume = data.value;
+      if (newVolume === 1) {
+        newVolume = 0;
+        SystemSetting.setVolume(0);
       }
-      lastVolume = data.value;
+      setCurrentVolume(newVolume);
+      lastVolume = newVolume;
     });
+
+    const interval = setInterval(async () => {
+      const volume = await SystemSetting.getVolume();
+      if (volume !== lastVolume) {
+        let newVolume = volume;
+        if (newVolume === 1) {
+          newVolume = 0;
+          SystemSetting.setVolume(0);
+        }
+        setCurrentVolume(newVolume);
+        lastVolume = newVolume;
+        if (isRecording && showClipButton) {
+          await handleClipButtonPress();
+        }
+      }
+    }, 500);
 
     return () => {
       SystemSetting.removeVolumeListener(volumeListener);
+      clearInterval(interval);
     };
-  }, []);
+  }, [isRecording, showClipButton]);
 
   // When recording starts, show the clip button after 5 seconds.
   useEffect(() => {
@@ -270,6 +296,15 @@ const Record = () => {
 
       {/* Bottom Control Buttons */}
       <View style={styles.controlsContainer}>
+        {/* "Clip Last Xs" Button: Appears after 5 seconds of recording */}
+        {isRecording && showClipButton && (
+          <TouchableOpacity onPress={handleClipButtonPress} style={styles.clipButton}>
+            <Text style={styles.clipButtonText}>
+              Clip Last {clipDuration}
+              {clipDuration === 60 ? "m" : "s"}
+            </Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity onPress={switchCamera} style={styles.modeButton}>
           <AntDesign name="retweet" size={28} color="white" />
         </TouchableOpacity>
@@ -285,17 +320,7 @@ const Record = () => {
         </TouchableOpacity>
       </View>
 
-      {/* "Clip Last Xs" Button: Appears after 5 seconds of recording */}
-      {isRecording && showClipButton && (
-        <View style={styles.clipContainer}>
-          <TouchableOpacity onPress={handleClipButtonPress} style={styles.clipButton}>
-            <Text style={styles.clipButtonText}>
-              Clip Last {clipDuration}
-              {clipDuration === 60 ? "m" : "s"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
+
     </SafeAreaView>
   );
 };
@@ -395,22 +420,31 @@ const styles = StyleSheet.create({
   recordingShutter: {
     backgroundColor: "red",
   },
-  clipContainer: {
-    position: "absolute",
-    bottom: 140,
-    width: "100%",
-    alignItems: "center",
-  },
   clipButton: {
-    backgroundColor: "#0000FF",
-    padding: 16,
-    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    backgroundColor: "rgba(236,66,66,0.5)",
+    borderRadius: 30,
+    marginBottom: 10,
+    position: "absolute",
+    bottom: 120,
+    left: 20,
   },
   clipButtonText: {
-    color: "white",
     fontSize: 16,
+    color: "white",
+  },
+  volumeContainer: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: [{ translateX: -150 }, { translateY: -12 }],
+  },
+  counterText: {
+    color: "white",
+    fontSize: 24,
+    marginBottom: 20,
   },
 });
 
 export default Record;
-//fixed
