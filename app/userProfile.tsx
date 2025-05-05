@@ -8,7 +8,7 @@ import {
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatList, GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import SearchInput from '@/components/SearchInput';
 import EmptyState from '@/components/EmptyState';
 import { getUserAndPosts, getFilePreview } from '@/lib/appwrite';
@@ -18,11 +18,9 @@ import icons from '@/constants/icons';
 import InfoBox from '@/components/InfoBox';
 
 const UserProfile = () => {
-  // Support both passedUserId and userId for flexibility.
   const { passedUserId, userId } = useLocalSearchParams<{ passedUserId?: string; userId?: string }>();
   const effectiveUserId = passedUserId || userId;
 
-  // Log the passed user id for debugging.
   useEffect(() => {
     console.log('Passed user id:', effectiveUserId);
   }, [effectiveUserId]);
@@ -35,14 +33,9 @@ const UserProfile = () => {
     );
   }
 
-  // State to store the user document and posts.
   const [data, setData] = useState<{ user: any; posts: any[] } | null>(null);
-  // State to store the transformed avatar URL.
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Toggle for showing clips (videos).
-  const [showClips, setShowClips] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -59,22 +52,17 @@ const UserProfile = () => {
     fetchData();
   }, [effectiveUserId]);
 
-  // Convert the avatar if available.
-  useEffect(() => {
-    if (data && data.user && data.user.avatar) {
-      getFilePreview(data.user.avatar, 'image')
-        .then(url => setAvatarUrl(url))
-        .catch(err => {
-          console.error("Error fetching avatar preview:", err);
-          setAvatarUrl(data.user.avatar);
-        });
-    }
-  }, [data]);
-
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchData();
     setRefreshing(false);
+  };
+
+  const generateInitials = (name: string) => {
+    if (!name) return '';
+    const nameParts = name.split(' ');
+    const initials = nameParts.map((part) => part[0]).join('').toUpperCase();
+    return initials.slice(0, 2); // Limit to 2 initials
   };
 
   if (error) {
@@ -98,9 +86,18 @@ const UserProfile = () => {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <Stack.Screen options={{ headerShown: false }}/>
       <SafeAreaView className="bg-primary h-full">
+      <View className="absolute top-20 left-4">
+  <TouchableOpacity 
+    onPress={() => router.back()} 
+    className="bg-red-600 px-4 py-2 rounded-lg"
+  >
+    <Text className="text-white font-bold text-lg">Back</Text>
+  </TouchableOpacity>
+</View>
         <FlatList
-          data={showClips ? data.posts : []}
+          data={data.posts} // Always display posts
           keyExtractor={(item) => item.$id}
           renderItem={({ item }) => <VideoCard video={item} />}
           ListHeaderComponent={() => (
@@ -116,19 +113,20 @@ const UserProfile = () => {
                   className="w-6 h-6"
                 />
               </TouchableOpacity>
-              <View className="w-16 h-16 border border-secondary rounded-lg justify-center items-center">
-                <Image
-                  source={{ uri: avatarUrl || data.user.avatar }}
-                  className="w-[90%] h-[90%] rounded-lg"
-                  resizeMode="cover"
-                />
+              {/* Avatar above the name */}
+              <View className="w-16 h-16 border border-secondary rounded-lg justify-center items-center bg-secondary">
+                <Text className="text-white text-lg font-bold">
+                  {generateInitials(data.user.username)}
+                </Text>
               </View>
+              {/* User's name */}
               <InfoBox
                 title={data.user.username}
                 containerStyles="mt-5"
                 titleStyles="text-lg"
                 subtitle={undefined}
               />
+              {/* Posts and Followers */}
               <View className="flex-row mt-5">
                 <InfoBox
                   title={data.posts.length || 0}
@@ -143,22 +141,6 @@ const UserProfile = () => {
                   containerStyles={undefined}
                 />
               </View>
-              {/* View Clip Button */}
-              <TouchableOpacity 
-                onPress={() => setShowClips(!showClips)}
-                className="mt-4 bg-blue-600 px-4 py-2 rounded-lg"
-              >
-                <Text className="text-white font-bold">
-                  {showClips ? "Hide Clips" : "View Clip"}
-                </Text>
-              </TouchableOpacity>
-              <SearchInput
-                otherStyles={undefined}
-                handleChangeText={undefined}
-                title={''}
-                value={undefined}
-                placeholder={''}
-              />
             </View>
           )}
           ListEmptyComponent={() => (

@@ -116,9 +116,8 @@ const Notifications = () => {
     <GestureHandlerRootView className="flex-1">
       <Stack.Screen options={{ headerShown: false }}/>
       <SafeAreaView className="flex-1 bg-black">
-        {/* Custom Back Button Header */}
         <View className="p-4 border-b border-secondary">
-          <TouchableOpacity onPress={() => router.push('/(tabs)/home')}>
+          <TouchableOpacity onPress={() => router.back()}>
             <Text className="text-secondary font-bold text-xl">Back</Text>
           </TouchableOpacity>
         </View>

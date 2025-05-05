@@ -3,7 +3,7 @@ import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 
-const TermsOfService = () => {
+const terms = () => {
   const router = useRouter();
 
   return (
@@ -70,3 +70,4 @@ const TermsOfService = () => {
     </SafeAreaView>
   );
 };
+export default terms;

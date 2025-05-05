@@ -16,7 +16,7 @@ const SignUp = () => {
     password: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [acceptedTerms, setAcceptedTerms] = useState(false); // <-- Added state for Terms
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const submit = async () => {
     if (!form.username || !form.email || !form.password) {
