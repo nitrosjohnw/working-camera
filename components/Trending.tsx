@@ -59,7 +59,9 @@ const TrendingItem = ({ activeItem, item }: { activeItem: any; item: any }) => {
           style={{
             width: '100%',
             height: '100%',
-            position: 'relative',
+            borderRadius: 15,
+            backgroundColor: '#1f2937', 
+            overflow: 'hidden',
           }}
         >
           <ImageBackground

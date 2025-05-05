@@ -144,7 +144,7 @@ function VideoCard({
         >
           <Image
             source={{ uri: thumbnail }}
-            className="w-full h-full rounded-xl mt-3"
+            className="w-full h-full rounded-xl mt-3 bg-gray-800"
             resizeMode="cover"
           />
           <View className="absolute inset-0 justify-center items-center">
