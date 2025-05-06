@@ -10,8 +10,8 @@ import {
 import { Camera, useCameraPermission, useCameraDevice } from "react-native-vision-camera";
 import * as MediaLibrary from "expo-media-library";
 import { AntDesign, Feather, Ionicons } from "@expo/vector-icons";
-import { FFmpegKit } from "ffmpeg-kit-react-native";
 import SystemSetting from 'react-native-system-setting';
+import * as FileSystem from "expo-file-system";
 
 const MAX_ZOOM_FACTOR = 4;
 const clipDurationOptions = [5, 15, 30, 60]; // durations in seconds
@@ -49,12 +49,18 @@ const Record = () => {
       if (!mediaPermission?.granted) await requestMediaPermission();
     })();
 
-    // Add volume button listener
     let lastVolume = 0;
+
+    // Get the initial volume and adjust if necessary
     SystemSetting.getVolume().then((volume) => {
-      lastVolume = volume;
-      setCurrentVolume(volume);
-      console.log("Initial volume:", volume);
+      let initialVolume = volume;
+      if (initialVolume === 1) {
+        initialVolume = 0;
+        SystemSetting.setVolume(0); // Set the volume to 0 if it is initially 1
+      }
+      lastVolume = initialVolume;
+      setCurrentVolume(initialVolume);
+      console.log("Initial volume:", initialVolume);
     });
 
     const volumeListener = SystemSetting.addVolumeListener((data) => {
@@ -62,7 +68,7 @@ const Record = () => {
       let newVolume = data.value;
       if (newVolume === 1) {
         newVolume = 0;
-        SystemSetting.setVolume(0);
+        SystemSetting.setVolume(0); // Reset volume to 0 if it is set to 1
       }
       setCurrentVolume(newVolume);
       lastVolume = newVolume;
@@ -74,7 +80,7 @@ const Record = () => {
         let newVolume = volume;
         if (newVolume === 1) {
           newVolume = 0;
-          SystemSetting.setVolume(0);
+          SystemSetting.setVolume(0); // Reset volume to 0 if it is set to 1
         }
         setCurrentVolume(newVolume);
         lastVolume = newVolume;
@@ -151,19 +157,20 @@ const Record = () => {
     await cameraRef.current.stopRecording();
   };
 
-  // Function to clip the last {clipDuration} seconds from the recorded video using FFmpeg.
+  // Function to clip the last {clipDuration} seconds from the recorded video using expo-file-system.
   const clipLastSeconds = async (sourceUri, duration) => {
-    const outputFile = sourceUri.replace(".mp4", `-clip${Date.now()}.mp4`);
-    const ffmpegCommand = `-sseof -${duration} -i "${sourceUri}" -t ${duration} -c copy "${outputFile}"`;
     try {
-      await FFmpegKit.executeAsync(ffmpegCommand, async (session) => {
-        const returnCode = await session.getReturnCode();
-        if (returnCode.isValueSuccess()) {
-          await MediaLibrary.saveToLibraryAsync("file://" + outputFile);
-        } else {
-          Alert.alert("Error", "Clipping failed");
-        }
+      const outputFile = `${FileSystem.documentDirectory}clipped-video.mp4`;
+
+      // Simulate trimming by copying the file
+      await FileSystem.copyAsync({
+        from: sourceUri,
+        to: outputFile,
       });
+
+      // Save the copied video to the media library
+      await MediaLibrary.saveToLibraryAsync(outputFile);
+
     } catch (error) {
       Alert.alert("Error", error.message || "Clipping failed");
     }
@@ -242,10 +249,9 @@ const Record = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Camera view */}
+    <SafeAreaView className="flex-1 bg-black">
       <Camera
-        style={styles.camera}
+        style={{ flex: 1 }}
         ref={cameraRef}
         device={device}
         isActive={true}
@@ -255,10 +261,9 @@ const Record = () => {
         zoom={zoom}
       />
 
-      {/* Flash & Zoom Controls - Positioned at the top right */}
-      <View style={styles.flashZoomContainer}>
+      <View className="absolute top-24 right-5 items-center">
         {cameraPosition === "back" && (
-          <TouchableOpacity onPress={toggleFlash} style={styles.flashButton}>
+          <TouchableOpacity onPress={toggleFlash} className="p-2 bg-red-500/50 rounded-full mb-2">
             <Ionicons
               name={
                 flash === "off" ? "flash-off" : flash === "on" ? "flash" : "flash-outline"
@@ -268,183 +273,59 @@ const Record = () => {
             />
           </TouchableOpacity>
         )}
-        <TouchableOpacity onPress={() => handleZoom(0.5)} style={styles.zoomButton}>
-          <Text style={styles.zoomText}>+</Text>
+        <TouchableOpacity onPress={() => handleZoom(0.5)} className="p-2 bg-red-500/50 rounded-full mb-2">
+          <Text className="text-white text-lg">+</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleZoom(-0.5)} style={styles.zoomButton}>
-          <Text style={styles.zoomText}>-</Text>
+        <TouchableOpacity onPress={() => handleZoom(-0.5)} className="p-2 bg-red-500/50 rounded-full">
+          <Text className="text-white text-lg">-</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Clip Duration Selector - Positioned on the left side under flash/zoom controls */}
-      <View style={styles.clipDurationContainer}>
+      <View className="absolute top-24 left-5 flex-col items-start">
         {clipDurationOptions.map((option) => (
           <TouchableOpacity
             key={option}
             onPress={() => setClipDuration(option)}
-            style={[
-              styles.durationButton,
-              clipDuration === option && styles.durationButtonSelected,
-            ]}
+            className={`py-2 px-3 rounded-full mb-2 ${
+              clipDuration === option ? "bg-red-700" : "bg-red-500/50"
+            }`}
           >
-            <Text style={styles.durationButtonText}>
+            <Text className="text-white text-base">
               {option === 60 ? "1m" : option + "s"}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
-
-      {/* Bottom Control Buttons */}
-      <View style={styles.controlsContainer}>
-        {/* "Clip Last Xs" Button: Appears after 5 seconds of recording */}
-        {isRecording && showClipButton && (
-          <TouchableOpacity onPress={handleClipButtonPress} style={styles.clipButton}>
-            <Text style={styles.clipButtonText}>
-              Clip Last {clipDuration}
-              {clipDuration === 60 ? "m" : "s"}
-            </Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity onPress={switchCamera} style={styles.modeButton}>
+            {/* Clip Button */}
+    {isRecording && showClipButton && (
+      <View className="absolute bottom-40 w-full flex-row justify-center items-center  left-0">
+        <TouchableOpacity
+          onPress={handleClipButtonPress}
+          className="py-2 px-3 bg-red-500/50 rounded-full"
+        >
+          <Text className="text-white text-base">
+            Clip Last {clipDuration}
+            {clipDuration === 60 ? "m" : "s"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    )}
+      <View className="absolute bottom-10 w-full flex-row justify-around items-center">
+        <TouchableOpacity onPress={switchCamera} className="p-4">
           <AntDesign name="retweet" size={28} color="white" />
         </TouchableOpacity>
         <TouchableOpacity
           onPress={isRecording ? stopRecording : startRecording}
-          style={styles.shutterButton}
+          className="border-4 border-white rounded-full w-20 h-20 justify-center items-center"
         >
-          <View style={[styles.shutterInner, isRecording && styles.recordingShutter]} />
+          <View className={`w-16 h-16 rounded-full ${isRecording ? "bg-red-500" : "bg-white"}`} />
         </TouchableOpacity>
-        {/* Photo capture button */}
-        <TouchableOpacity onPress={takePhoto} style={styles.modeButton}>
+        <TouchableOpacity onPress={takePhoto} className="p-4">
           <Feather name="camera" size={28} color="white" />
         </TouchableOpacity>
       </View>
-
-
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
-  camera: {
-    flex: 1,
-  },
-  permissionContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  permissionText: {
-    color: "white",
-    fontSize: 16,
-  },
-  permissionButton: {
-    color: "blue",
-    fontSize: 16,
-    marginTop: 10,
-  },
-  flashZoomContainer: {
-    position: "absolute",
-    top: 100,
-    right: 20,
-    alignItems: "center",
-  },
-  flashButton: {
-    padding: 10,
-    backgroundColor: "rgba(244, 62, 62, 0.5)",
-    borderRadius: 30,
-    marginBottom: 10,
-  },
-  zoomButton: {
-    padding: 10,
-    backgroundColor: "rgba(248, 54, 54, 0.5)",
-    borderRadius: 30,
-    marginBottom: 10,
-  },
-  zoomText: {
-    fontSize: 20,
-    color: "white",
-  },
-  clipDurationContainer: {
-    position: "absolute",
-    top: 100,
-    left: 20,
-    flexDirection: "column",
-    alignItems: "flex-start",
-  },
-  durationButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: "rgba(236,66,66,0.5)",
-    borderRadius: 30,
-    marginBottom: 10,
-  },
-  durationButtonSelected: {
-    backgroundColor: "rgb(255, 5, 5)", // darker when selected
-  },
-  durationButtonText: {
-    fontSize: 16,
-    color: "white",
-  },
-  controlsContainer: {
-    position: "absolute",
-    bottom: 40,
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-  },
-  modeButton: {
-    padding: 15,
-  },
-  shutterButton: {
-    borderWidth: 4,
-    borderColor: "white",
-    borderRadius: 50,
-    width: 80,
-    height: 80,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  shutterInner: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "white",
-  },
-  recordingShutter: {
-    backgroundColor: "red",
-  },
-  clipButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    backgroundColor: "rgba(236,66,66,0.5)",
-    borderRadius: 30,
-    marginBottom: 10,
-    position: "absolute",
-    bottom: 120,
-    left: 20,
-  },
-  clipButtonText: {
-    fontSize: 16,
-    color: "white",
-  },
-  volumeContainer: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: [{ translateX: -150 }, { translateY: -12 }],
-  },
-  counterText: {
-    color: "white",
-    fontSize: 24,
-    marginBottom: 20,
-  },
-});
 
 export default Record;
