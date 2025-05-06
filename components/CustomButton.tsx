@@ -34,7 +34,7 @@ const CustomButton = ({
     >
       {/* Button text */}
       <Text className={`text-white font-psemibold text-lg ${textStyles}`}>
-        {title} {/* Display the button title */}
+        {title}
       </Text>
     </TouchableOpacity>
   );

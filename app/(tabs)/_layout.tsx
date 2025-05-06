@@ -20,7 +20,7 @@ const TabIcon = ({ icon, color, name, focused }: { focused: boolean; icon: any; 
         className={`${focused ? 'font-psemibold' : 'font-pregular'} text-xs w-12 items-center justify-center`} // Dynamic font style based on focus state
         style={{ color: color }} // Set the text color dynamically
       >
-        {name} {/* Tab name */}
+        {name}
       </Text>
     </View>
   );

@@ -130,7 +130,7 @@ const UserProfile = () => {
               {/* Avatar above the name */}
               <View className="w-16 h-16 border border-secondary rounded-lg justify-center items-center bg-secondary">
                 <Text className="text-white text-lg font-bold">
-                  {generateInitials(data.user.username)} {/* Display user initials */}
+                  {generateInitials(data.user.username)} 
                 </Text>
               </View>
               {/* User's name */}

@@ -46,7 +46,7 @@ const Search = () => {
                 Search Results
               </Text>
               <Text className="text-3xl font-psemibold text-white">
-                {query} {/* Display the search query */}
+                {query}
               </Text>
               <View className="mt-6 mb-8">
                 {/* Search input field */}

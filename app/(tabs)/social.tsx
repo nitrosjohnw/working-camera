@@ -122,16 +122,7 @@ const Social = () => {
         keyboardShouldPersistTaps="handled"
       >
         <View className="my-6 px-4 space-y-6">
-          <View className="flex-row justify-between items-center mb-6">
-            <View>
-              <Text className="font-pmedium text-sm text-white">
-                Welcome Back
-              </Text>
-              {/* Display the username */}
-              <Text className="text-2xl font-psemibold text-white">
-                {user?.username} 
-              </Text>
-            </View>
+          <View className="flex-row justify-center items-center mb-6">
             <View className="mt-1.5">
               <Image
                 source={icons.logo} // Source for the app logo

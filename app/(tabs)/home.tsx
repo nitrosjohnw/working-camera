@@ -60,7 +60,7 @@ const Home = () => {
               <View>
                 <Text className="font-pmedium text-sm text-white">Welcome Back</Text>
                 <Text className="text-2xl font-psemibold text-white">
-                  {user?.username || 'Guest'} {/* Fallback to 'Guest' if username is undefined */}
+                  {user?.username || 'Guest'}
                 </Text>
               </View>
               <View className="flex-row items-center">
@@ -77,7 +77,7 @@ const Home = () => {
                   {notificationCount > 0 && (
                     <View className="absolute top-0 right-0 bg-red-500 rounded-full w-5 h-5 justify-center items-center">
                       <Text className="text-white text-xs">
-                        {notificationCount > 99 ? '99+' : notificationCount} {/* Show "99+" if count exceeds 99 */}
+                        {notificationCount > 99 ? '99+' : notificationCount}
                       </Text>
                     </View>
                   )}

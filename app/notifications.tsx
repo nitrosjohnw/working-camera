@@ -103,17 +103,21 @@ const Notifications = () => {
           onPress={() => handleNotificationPress(item)} // Handle notification press
           className="p-4 border-b border-gray-600"
         >
+          {/* Notification type */}
           <Text className="text-white font-bold">
-            {item.type === 'like' ? 'New Like' : 'New Comment'} {/* Notification type */}
+            {item.type === 'like' ? 'New Like' : 'New Comment'} 
           </Text>
-          <Text className="text-white">{item.message}</Text> {/* Notification message */}
+          {/* Notification message */}
+          <Text className="text-white">{item.message}</Text> 
+          {/* Notification timestamp */}
           <Text className="text-gray-400 text-xs">
-            {new Date(item.createdAt).toLocaleString()} {/* Notification timestamp */}
+            {new Date(item.createdAt).toLocaleString()} 
           </Text>
         </TouchableOpacity>
+        {/* Display the associated video */}
         {isExpanded && (
           <View className="p-4">
-            <VideoCard video={item.post} /> {/* Display the associated video */}
+            <VideoCard video={item.post} /> 
           </View>
         )}
       </>

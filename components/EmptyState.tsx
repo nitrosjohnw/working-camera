@@ -21,11 +21,11 @@ const EmptyState = ({ title, subtitle }: { title: string; subtitle: string }) =>
       />
       {/* Display the main title */}
       <Text className="text-3xl text-center font-psemibold text-white mt-2">
-        {title} {/* Render the title passed as a prop */}
+        {title} 
       </Text>
       {/* Display the subtitle */}
       <Text className="font-pmedium text-xl text-white">
-        {subtitle} {/* Render the subtitle passed as a prop */}
+        {subtitle}
       </Text>
       {/* Button to navigate to the upload screen */}
       <CustomButton
