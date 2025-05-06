@@ -1,3 +1,4 @@
+// Import necessary components and libraries
 import { 
   View, 
   Text, 
@@ -24,14 +25,14 @@ const Home = () => {
   const { data: latestPosts } = useAppwrite(getLatestPosts);
 
   const [refreshing, setRefreshing] = useState(false);
-  // Dummy state for notification count; replace with real logic as needed.
-  const [notificationCount, setNotificationCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0); // State for notification count
 
+  // Set a dummy notification count on component mount
   useEffect(() => {
-    // Replace this with your actual logic to fetch notifications count.
     setNotificationCount(3);
   }, []);
 
+  // Handle pull-to-refresh functionality
   const onRefresh = async () => {
     setRefreshing(true);
     await refetch();
@@ -50,37 +51,41 @@ const Home = () => {
   return (
     <SafeAreaView className="bg-primary h-full">
       <FlatList
-        data={posts}
-        keyExtractor={(item: { $id: string }) => item.$id}
-        renderItem={({ item }) => <VideoCard video={item} />}
+        data={posts} // Data for the list
+        keyExtractor={(item: { $id: string }) => item.$id} // Unique key for each item
+        renderItem={({ item }) => <VideoCard video={item} />} // Render each video using the VideoCard component
         ListHeaderComponent={() => (
           <View className="my-6 px-4 space-y-6">
             <View className="flex-row justify-between items-center mb-6">
               <View>
                 <Text className="font-pmedium text-sm text-white">Welcome Back</Text>
-                <Text className="text-2xl font-psemibold text-white">{user?.username}</Text>
+                <Text className="text-2xl font-psemibold text-white">
+                  {user?.username || 'Guest'} {/* Fallback to 'Guest' if username is undefined */}
+                </Text>
               </View>
               <View className="flex-row items-center">
                 <TouchableOpacity
-                  onPress={() => router.push('/notifications')}
+                  onPress={() => router.push('/notifications')} // Navigate to notifications screen
                   className="relative mr-2"
                 >
                   <Image
-                    source={icons.notification}
-                    className="w-6 h-8"
-                    resizeMode="contain"
-                    style={{ tintColor: "#FF0000" }}
+                    source={icons.notification} // Notification icon
+                    className="w-6 h-8" // Icon size
+                    resizeMode="contain" // Ensure the image fits within its container
+                    style={{ tintColor: "#FF0000" }} // Red tint for the icon
                   />
                   {notificationCount > 0 && (
                     <View className="absolute top-0 right-0 bg-red-500 rounded-full w-5 h-5 justify-center items-center">
-                      <Text className="text-white text-xs">{notificationCount}</Text>
+                      <Text className="text-white text-xs">
+                        {notificationCount > 99 ? '99+' : notificationCount} {/* Show "99+" if count exceeds 99 */}
+                      </Text>
                     </View>
                   )}
                 </TouchableOpacity>
                 <Image
-                  source={icons.logo}
-                  className="w-10 h-10"
-                  resizeMode="contain"
+                  source={icons.logo} // App logo source
+                  className="w-10 h-10" // Logo size
+                  resizeMode="contain" // Ensure the image fits within its container
                 />
               </View>
             </View>
@@ -101,11 +106,16 @@ const Home = () => {
         )}
         ListEmptyComponent={() => (
           <EmptyState
-            title="No Videos Found"
-            subtitle="No Videos Created Yet"
+            title="No Videos Found" // Title for the empty state
+            subtitle="No Videos Created Yet" // Subtitle for the empty state
           />
         )}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} // Refreshing state
+            onRefresh={onRefresh} // Function to handle refresh
+          />
+        }
       />
     </SafeAreaView>
   );

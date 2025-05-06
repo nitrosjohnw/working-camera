@@ -1,3 +1,4 @@
+// Import necessary components and libraries
 import {
   View,
   Text,
@@ -20,6 +21,7 @@ import { router } from 'expo-router';
 import { createVideo } from '@/lib/appwrite';
 import { useGlobalContext } from '@/context/GlobalProvider';
 
+// Define the list of sports options for the dropdown
 const sportsOptions = [
   { label: 'Skateboarding', value: 'Skateboarding' },
   { label: 'BMX', value: 'BMX' },
@@ -32,16 +34,24 @@ const sportsOptions = [
 ];
 
 const Upload = () => {
+  // Access the global user context
   const { user } = useGlobalContext();
+
+  // State to track the uploading process
   const [uploading, setUploading] = useState(false);
+
+  // State to manage the form data
   const [form, setForm] = useState({
-    title: '',
-    video: null,
-    thumbnail: null,
-    sport: '',
+    title: '', // Title of the video
+    video: null, // Video file
+    thumbnail: null, // Thumbnail image
+    sport: '', // Selected sport category
   });
+
+  // State to control the visibility of the sport selection modal
   const [showSportModal, setShowSportModal] = useState(false);
 
+  // Request media library permissions when the component mounts
   useEffect(() => {
     (async () => {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -51,19 +61,21 @@ const Upload = () => {
     })();
   }, []);
 
+  // Function to open the media picker for selecting an image or video
   const openPicker = async (selectType: string) => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes:
           selectType === 'image'
-            ? ImagePicker.MediaTypeOptions.Images
-            : ImagePicker.MediaTypeOptions.Videos,
-        allowsEditing: true, // Editing is now enabled
-        quality: 1,
+            ? ImagePicker.MediaTypeOptions.Images // Allow only images
+            : ImagePicker.MediaTypeOptions.Videos, // Allow only videos
+        allowsEditing: true, // Enable editing
+        quality: 1, // Set the quality to maximum
       });
 
       console.log('Picker result:', result);
 
+      // Update the form state with the selected file
       if (!result.canceled && result.assets.length > 0) {
         if (selectType === 'image') {
           setForm((prevForm) => ({ ...prevForm, thumbnail: result.assets[0] }));
@@ -76,27 +88,34 @@ const Upload = () => {
     }
   };
 
+  // Function to remove the selected video
   const removeVideo = () => {
     setForm((prevForm) => ({ ...prevForm, video: null }));
   };
 
+  // Function to remove the selected thumbnail image
   const removeImage = () => {
     setForm((prevForm) => ({ ...prevForm, thumbnail: null }));
   };
 
+  // Function to handle form submission
   const submit = async () => {
+    // Validate that all required fields are filled
     if (!form.title || !form.video || !form.thumbnail || !form.sport) {
       return Alert.alert('Please fill in all the fields');
     }
-    setUploading(true);
+
+    setUploading(true); // Set uploading state to true
 
     try {
+      // Call the API to create a new video post
       await createVideo({ ...form, userId: user.$id });
       Alert.alert('Success', 'Post Uploaded successfully');
-      router.push('/(tabs)/home');
+      router.push('/(tabs)/home'); // Navigate to the home screen
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', error.message); // Show an error message
     } finally {
+      // Reset the form and uploading state
       setForm({
         title: '',
         video: null,
@@ -109,7 +128,8 @@ const Upload = () => {
 
   return (
     <SafeAreaView className="bg-primary h-full">
-      {uploading && ( // Show spinner when uploading
+      {/* Show a loading spinner when uploading */}
+      {uploading && (
         <View className="absolute inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
           <ActivityIndicator size="large" color="#ffffff" />
           <Text className="text-white mt-4">Uploading...</Text>
@@ -119,6 +139,7 @@ const Upload = () => {
       <ScrollView className="px-4 mt-6" keyboardShouldPersistTaps="handled">
         <Text className="text-2xl text-white font-psemibold">Upload Video</Text>
 
+        {/* Video Title Input */}
         <FormField
           otherStyles="mt-10"
           title="Video Title"
@@ -127,12 +148,13 @@ const Upload = () => {
           handleChangeText={(e: any) => setForm({ ...form, title: e })}
         />
 
-        {/* VIDEO PICKER */}
+        {/* Video Picker */}
         <View className="mt-7 space-y-2">
           <Text className="text-base text-white font-pmedium">Upload Video</Text>
           <TouchableOpacity onPress={() => openPicker('video')} disabled={!!form.video}>
             {form.video?.uri ? (
               <>
+                {/* Display the selected video */}
                 <Video
                   source={{ uri: form.video.uri }}
                   style={{ width: '100%', height: 500, borderRadius: 20 }}
@@ -150,6 +172,7 @@ const Upload = () => {
                 />
               </>
             ) : (
+              // Placeholder for video picker
               <View className="w-full h-40 bg-white rounded-2xl justify-center items-center border-2 border-red-500">
                 <View className="w-14 h-14 border border-dashed border-secondary justify-center items-center">
                   <Image source={icons.upload} resizeMode="contain" className="w-1/2 h-1/2" />
@@ -159,12 +182,13 @@ const Upload = () => {
           </TouchableOpacity>
         </View>
 
-        {/* THUMBNAIL PICKER */}
+        {/* Thumbnail Picker */}
         <View className="mt-7 space-y-2">
           <Text className="text-base text-white font-pmedium">Thumbnail Image</Text>
           <TouchableOpacity onPress={() => openPicker('image')} disabled={!!form.thumbnail}>
             {form.thumbnail?.uri ? (
               <>
+                {/* Display the selected thumbnail */}
                 <Image
                   source={{ uri: form.thumbnail.uri }}
                   resizeMode="cover"
@@ -178,6 +202,7 @@ const Upload = () => {
                 />
               </>
             ) : (
+              // Placeholder for thumbnail picker
               <View className="w-full h-16 bg-white rounded-2xl justify-center items-center border-2 border-red-500 flex-row space-x-2">
                 <Image source={icons.upload} resizeMode="contain" className="w-5 h-5" />
                 <Text className="text-sm text-secondary font-pmedium px-4">
@@ -188,7 +213,7 @@ const Upload = () => {
           </TouchableOpacity>
         </View>
 
-        {/* SPORT DROPDOWN USING MODAL */}
+        {/* Sport Dropdown */}
         <View className="mt-7">
           <Text className="text-base text-white font-pmedium">Select Sport</Text>
           <TouchableOpacity
@@ -203,6 +228,7 @@ const Upload = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Submit Button */}
         <CustomButton
           title="Post Clip"
           handlePress={submit}
@@ -211,7 +237,7 @@ const Upload = () => {
         />
       </ScrollView>
 
-      {/* SPORT SELECTION MODAL */}
+      {/* Sport Selection Modal */}
       <Modal
         visible={showSportModal}
         transparent={true}

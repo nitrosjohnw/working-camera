@@ -1,3 +1,8 @@
+/* Import Tailwind's base styles (e.g., resets and default styles) */
 @tailwind base;
+
+/* Import Tailwind's component styles (e.g., pre-designed UI components) */
 @tailwind components;
+
+/* Import Tailwind's utility classes (e.g., margin, padding, colors, etc.) */
 @tailwind utilities;

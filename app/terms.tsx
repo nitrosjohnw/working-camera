@@ -1,19 +1,26 @@
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+// Import necessary components and libraries
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native'; // Core React Native components
+import React from 'react'; // React library for building components
+import { SafeAreaView } from 'react-native-safe-area-context'; // Ensures content is displayed within safe areas
+import { Stack, useRouter } from 'expo-router'; // Expo Router utilities for navigation
 
 const terms = () => {
-  const router = useRouter();
+  const router = useRouter(); // Hook to handle navigation
 
   return (
+    // SafeAreaView ensures content is displayed within the device's safe area
     <SafeAreaView className="bg-primary h-full">
-    <Stack.Screen options={{ headerShown: false }}/>
+      {/* Hide the default header */}
+      <Stack.Screen options={{ headerShown: false }} />
+
+      {/* ScrollView allows scrolling if content exceeds the screen height */}
       <ScrollView className="px-4 py-6">
+        {/* Title of the Terms of Service page */}
         <Text className="text-3xl text-white font-semibold mb-4">
           Terms of Service
         </Text>
 
+        {/* Introduction to the Terms of Service */}
         <Text className="text-white mb-4">
           Welcome to FlipClipz! Please read these Terms of Service ("Terms") carefully before using our app. By accessing or using FlipClipz, you agree to be bound by these Terms.
         </Text>
@@ -61,7 +68,7 @@ const terms = () => {
 
         {/* Back Button */}
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => router.back()} // Navigate back to the previous screen
           className="bg-secondary py-3 px-5 rounded-lg items-center"
         >
           <Text className="text-white text-lg font-semibold">Go Back</Text>
@@ -70,4 +77,5 @@ const terms = () => {
     </SafeAreaView>
   );
 };
-export default terms;
+
+export default terms; // Export the Terms of Service component

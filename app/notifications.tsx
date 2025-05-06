@@ -1,40 +1,44 @@
+// Disable the header for this screen
 export const unstable_settings = {
   headerShown: false,
 };
 
-import React, { useEffect, useState, } from 'react';
+// Import necessary components and libraries
+import React, { useEffect, useState } from 'react';
 import { FlatList, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useGlobalContext } from '@/context/GlobalProvider';
-import { getUserPosts, getCommentsForVideo } from '@/lib/appwrite';
-import VideoCard from '@/components/VideoCard';
+import { useGlobalContext } from '@/context/GlobalProvider'; // Access global user context
+import { getUserPosts, getCommentsForVideo } from '@/lib/appwrite'; // API functions for fetching posts and comments
+import VideoCard from '@/components/VideoCard'; // Component to display video details
 
+// Define the structure of a notification item
 type NotificationItem = {
-  id: string;
-  type: 'like' | 'comment';
-  message: string;
-  createdAt: string;
+  id: string; // Unique identifier for the notification
+  type: 'like' | 'comment'; // Type of notification (like or comment)
+  message: string; // Notification message
+  createdAt: string; // Timestamp of the notification
   post: any; // The video object associated with this notification
 };
 
 const Notifications = () => {
-  const { user } = useGlobalContext();
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
-  // Track which notification is currently expanded.
-  const [expandedNotificationId, setExpandedNotificationId] = useState<string | null>(null);
+  const { user } = useGlobalContext(); // Get the current user from the global context
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]); // State to store notifications
+  const [refreshing, setRefreshing] = useState(false); // State to track pull-to-refresh status
+  const [expandedNotificationId, setExpandedNotificationId] = useState<string | null>(null); // Track expanded notification
 
+  // Fetch notifications for the current user
   const fetchNotifications = async () => {
     try {
-      // Fetch videos created by the current user.
+      // Fetch videos created by the current user
       const posts = await getUserPosts(user.$id);
       let notifs: NotificationItem[] = [];
 
+      // Process each post to generate notifications
       await Promise.all(
         posts.map(async (post) => {
-          // Notification for likes.
+          // Add a notification for likes
           if (post.likedBy && Array.isArray(post.likedBy) && post.likedBy.length > 0) {
             notifs.push({
               id: post.$id + '-likes',
@@ -44,7 +48,8 @@ const Notifications = () => {
               post: post,
             });
           }
-          // Notification for comments.
+
+          // Add a notification for comments
           try {
             const commentsForPost = await getCommentsForVideo(post.$id);
             if (commentsForPost && commentsForPost.length > 0) {
@@ -62,50 +67,53 @@ const Notifications = () => {
         })
       );
 
-      // Sort notifications by createdAt descending.
+      // Sort notifications by creation date in descending order
       notifs.sort((a, b) => Number(new Date(b.createdAt)) - Number(new Date(a.createdAt)));
-      setNotifications(notifs);
+      setNotifications(notifs); // Update the notifications state
     } catch (error: any) {
       console.error("Error fetching notifications:", error);
     }
   };
 
+  // Handle pull-to-refresh functionality
   const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchNotifications();
-    setRefreshing(false);
+    setRefreshing(true); // Set refreshing state to true
+    await fetchNotifications(); // Fetch notifications
+    setRefreshing(false); // Reset refreshing state
   };
 
+  // Fetch notifications when the user is available
   useEffect(() => {
     if (user) {
       fetchNotifications();
     }
   }, [user]);
 
+  // Handle notification press to toggle expansion
   const handleNotificationPress = (item: NotificationItem) => {
-    // Toggle expansion: collapse if already expanded, otherwise expand it.
-    setExpandedNotificationId(expandedNotificationId === item.id ? null : item.id);
+    setExpandedNotificationId(expandedNotificationId === item.id ? null : item.id); // Toggle expansion
   };
 
+  // Render a single notification item
   const renderItem = ({ item }: { item: NotificationItem }) => {
-    const isExpanded = expandedNotificationId === item.id;
+    const isExpanded = expandedNotificationId === item.id; // Check if the notification is expanded
     return (
       <>
         <TouchableOpacity
-          onPress={() => handleNotificationPress(item)}
+          onPress={() => handleNotificationPress(item)} // Handle notification press
           className="p-4 border-b border-gray-600"
         >
           <Text className="text-white font-bold">
-            {item.type === 'like' ? 'New Like' : 'New Comment'}
+            {item.type === 'like' ? 'New Like' : 'New Comment'} {/* Notification type */}
           </Text>
-          <Text className="text-white">{item.message}</Text>
+          <Text className="text-white">{item.message}</Text> {/* Notification message */}
           <Text className="text-gray-400 text-xs">
-            {new Date(item.createdAt).toLocaleString()}
+            {new Date(item.createdAt).toLocaleString()} {/* Notification timestamp */}
           </Text>
         </TouchableOpacity>
         {isExpanded && (
           <View className="p-4">
-            <VideoCard video={item.post} />
+            <VideoCard video={item.post} /> {/* Display the associated video */}
           </View>
         )}
       </>
@@ -114,23 +122,25 @@ const Notifications = () => {
 
   return (
     <GestureHandlerRootView className="flex-1">
-      <Stack.Screen options={{ headerShown: false }}/>
+      <Stack.Screen options={{ headerShown: false }} /> {/* Hide the header */}
       <SafeAreaView className="flex-1 bg-black">
+        {/* Back button */}
         <View className="p-4 border-b border-secondary">
           <TouchableOpacity onPress={() => router.back()}>
             <Text className="text-secondary font-bold text-xl">Back</Text>
           </TouchableOpacity>
         </View>
+        {/* List of notifications */}
         <FlatList
-          data={notifications}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
+          data={notifications} // Notifications data
+          keyExtractor={(item) => item.id} // Unique key for each notification
+          renderItem={renderItem} // Render each notification
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> // Pull-to-refresh control
           }
           ListEmptyComponent={
             <View className="p-4 items-center justify-center">
-              <Text className="text-white">No notifications yet</Text>
+              <Text className="text-white">No notifications yet</Text> {/* Empty state message */}
             </View>
           }
         />

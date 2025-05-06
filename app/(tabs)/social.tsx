@@ -1,3 +1,4 @@
+// Import necessary components and libraries
 import { 
   View, 
   Text, 
@@ -10,7 +11,6 @@ import {
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import icons from '@/constants/icons';
-import SearchInput from '@/components/SearchInput';
 import EmptyState from '@/components/EmptyState';
 import { getAllPosts } from '@/lib/appwrite';
 import useAppwrite from '@/lib/useAppwrite';
@@ -19,13 +19,19 @@ import { useGlobalContext } from '../../context/GlobalProvider';
 import { router } from 'expo-router';
 
 const Social = () => {
+  // Access the global user context to get the current user
   const { user } = useGlobalContext();
+
+  // Fetch all posts using the custom Appwrite hook
   const { data: posts, refetch } = useAppwrite(getAllPosts);
+
+  // State to track refreshing status for pull-to-refresh functionality
   const [refreshing, setRefreshing] = useState(false);
-  // Holds the sport selected when "More" is pressed.
+
+  // Holds the sport selected when the "More" button is pressed
   const [selectedSport, setSelectedSport] = useState<string | null>(null);
 
-  // Define the fixed list of sports categories.
+  // Define the fixed list of sports categories
   const sportsCategories = [
     "Skateboarding",
     "BMX",
@@ -37,21 +43,26 @@ const Social = () => {
     "Scootering",
   ];
 
+  // Function to handle pull-to-refresh
   const onRefresh = async () => {
-    setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
+    setRefreshing(true); // Set refreshing state to true
+    await refetch(); // Refetch posts from the server
+    setRefreshing(false); // Reset refreshing state
   };
 
-  // When a sport is selected, filter posts by that sport.
+  // When a sport is selected, filter posts by that sport
   if (selectedSport) {
+    // Filter posts for the selected sport
     const sportPosts = posts.filter((post) => post.sport === selectedSport);
-    // Sort sport posts by $createdAt descending (latest first)
+
+    // Sort sport posts by creation date in descending order (latest first)
     sportPosts.sort((a, b) =>
       a.$createdAt && b.$createdAt
         ? Number(new Date(b.$createdAt)) - Number(new Date(a.$createdAt))
         : 0
     );
+
+    // Render the selected sport's posts
     return (
       <SafeAreaView className="bg-primary h-full">
         <View className="px-4 mt-6">
@@ -63,13 +74,13 @@ const Social = () => {
           </Text>
         </View>
         <FlatList
-          data={sportPosts}
-          keyExtractor={(item) => item.$id}
-          renderItem={({ item }) => <VideoCard video={item} />}
+          data={sportPosts} // Data for the FlatList
+          keyExtractor={(item) => item.$id} // Unique key for each item
+          renderItem={({ item }) => <VideoCard video={item} />} // Render each video using the VideoCard component
           ListEmptyComponent={() => (
             <EmptyState
-              title="No Videos Found"
-              subtitle="No videos for this sport yet"
+              title="No Videos Found" // Title for the empty state
+              subtitle="No videos for this sport yet" // Subtitle for the empty state
             />
           )}
           refreshControl={
@@ -80,17 +91,17 @@ const Social = () => {
     );
   }
 
-  // Group posts by sport.
+  // Group posts by sport category
   const groupedBySport = posts?.reduce((acc, post) => {
-    const sport = post.sport;
+    const sport = post.sport; // Get the sport category of the post
     if (!acc[sport]) {
-      acc[sport] = [];
+      acc[sport] = []; // Initialize an array for the sport if it doesn't exist
     }
-    acc[sport].push(post);
+    acc[sport].push(post); // Add the post to the corresponding sport category
     return acc;
   }, {} as Record<string, any[]>) || {};
 
-  // Sort each group by created time descending (latest first).
+  // Sort each group of posts by creation date in descending order (latest first)
   Object.keys(groupedBySport).forEach((sport) => {
     groupedBySport[sport].sort((a, b) => {
       if (a.$createdAt && b.$createdAt) {
@@ -100,6 +111,7 @@ const Social = () => {
     });
   });
 
+  // Render the main screen with grouped sports categories
   return (
     <SafeAreaView className="bg-primary h-full">
       <ScrollView
@@ -109,37 +121,29 @@ const Social = () => {
         }
         keyboardShouldPersistTaps="handled"
       >
-        {/* Header */}
         <View className="my-6 px-4 space-y-6">
           <View className="flex-row justify-between items-center mb-6">
             <View>
               <Text className="font-pmedium text-sm text-white">
                 Welcome Back
               </Text>
+              {/* Display the username */}
               <Text className="text-2xl font-psemibold text-white">
-                {user?.username}
+                {user?.username} 
               </Text>
             </View>
             <View className="mt-1.5">
               <Image
-                source={icons.logo}
-                className="w-12 h-12"
-                resizeMode="contain"
+                source={icons.logo} // Source for the app logo
+                className="w-12 h-12" // Styling for the logo
+                resizeMode="contain" // Ensure the image fits within its container
               />
             </View>
           </View>
-          <SearchInput
-            otherStyles={undefined}
-            handleChangeText={undefined}
-            title={''}
-            value={undefined}
-            placeholder={''}
-          />
         </View>
 
-        {/* Display each sport category */}
         {sportsCategories.map((sport) => {
-          // Get posts for this sport if available.
+          // Get posts for this sport if available
           const sportPosts = groupedBySport[sport] || [];
           return (
             <View key={sport} className="mb-8">
@@ -154,10 +158,10 @@ const Social = () => {
                 )}
               </View>
               {sportPosts.length > 0 ? (
-                <VideoCard video={sportPosts[0]} />
+                <VideoCard video={sportPosts[0]} /> // Render the latest video for the sport
               ) : (
                 <TouchableOpacity
-                  onPress={() => router.push('/(tabs)/upload')}
+                  onPress={() => router.push('/(tabs)/upload')} // Navigate to the upload screen
                   className="p-4 border border-dashed border-gray-500 rounded-lg"
                 >
                   <Text className="text-white text-center">
